@@ -1,6 +1,10 @@
-import type { AnyModalBlock, SlackAppContext } from "slack-cloudflare-workers";
+import type {
+	AnyModalBlock,
+	GlobalShortcut,
+	MessageShortcut,
+	SlackAppContext,
+} from "slack-cloudflare-workers";
 import type { DatabaseService } from "../services/d1";
-import type { Env } from "../types/env";
 
 export class ShortcutHandler {
 	constructor(
@@ -8,8 +12,13 @@ export class ShortcutHandler {
 		private db: DatabaseService,
 	) {}
 
-	async handle(shortcut: string, trigger_id: string, context: SlackAppContext) {
-		switch (shortcut) {
+	async handle(
+		payload: GlobalShortcut | MessageShortcut,
+		context: SlackAppContext,
+	) {
+		const { callback_id, trigger_id } = payload;
+
+		switch (callback_id) {
 			case "add_emoji_label":
 				return this.openEmojiLabelModal(trigger_id, context);
 			case "list_emoji_labels":
@@ -22,14 +31,17 @@ export class ShortcutHandler {
 		context: SlackAppContext,
 	) {
 		const emojiList = await context.client.emoji.list();
-		const options = Object.keys(emojiList).map((emoji) => ({
-			text: {
-				type: "plain_text" as const,
-				text: `:${emoji}:`,
-				emoji: true,
-			},
-			value: emoji,
-		}));
+		// biome-ignore lint/style/noNonNullAssertion: <explanation>
+		const options = Object.keys(emojiList.emoji!)
+			.slice(0, 99)
+			.map((emoji) => ({
+				text: {
+					type: "plain_text" as const,
+					text: `:${emoji}:`,
+					emoji: true,
+				},
+				value: emoji,
+			}));
 
 		await context.client.views.open({
 			trigger_id,

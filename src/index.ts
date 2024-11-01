@@ -1,5 +1,4 @@
 import { createSlackApp } from "./app";
-import type { Env } from "./types/env";
 
 export default {
 	async fetch(

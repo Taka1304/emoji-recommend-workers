@@ -1,6 +1,5 @@
 import type { SlackAppContext } from "slack-cloudflare-workers";
 import type { EmbeddingService } from "../services/embedding";
-import type { Env } from "../types/env";
 
 export class MessageHandler {
 	constructor(
@@ -12,8 +11,6 @@ export class MessageHandler {
 	async handleMessage(event: any, context: SlackAppContext) {
 		if (event.subtype === "bot_message") return;
 
-		console.log("handle Message", event.text);
-
 		const { channel, ts, text } = event;
 		if (!channel || !ts || !text) return;
 
@@ -24,7 +21,7 @@ export class MessageHandler {
 				namespace: "emoji",
 				returnMetadata: "all",
 			});
-
+			console.log("Vectorize res: ", result);
 			await this.addReactions(result, channel, ts, context);
 		} catch (error) {
 			const result: VectorizeMatches = {
