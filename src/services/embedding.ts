@@ -6,7 +6,7 @@ export class EmbeddingService {
 		url: string,
 		options: RequestInit,
 		retries = 2,
-		delay = 13000,
+		delay = 5000,
 	): Promise<Response> {
 		for (let i = 0; i < retries; i++) {
 			const response = await fetch(url, options);

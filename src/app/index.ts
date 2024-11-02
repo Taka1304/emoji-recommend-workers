@@ -1,4 +1,5 @@
-import { SlackApp } from "slack-cloudflare-workers";
+import { SlackApp, type WebhookParams } from "slack-cloudflare-workers";
+import { CommandHandler } from "../handlers/command";
 import { MessageHandler } from "../handlers/message";
 import { ShortcutHandler } from "../handlers/shortcut";
 import { DatabaseService } from "../services/d1";
@@ -9,7 +10,27 @@ export function createSlackApp(env: Env) {
 	const embeddingService = new EmbeddingService(env);
 	const db = new DatabaseService(env.DB);
 	const messageHandler = new MessageHandler(env, embeddingService);
-	const shortcutHandler = new ShortcutHandler(env, db);
+	const shortcutHandler = new ShortcutHandler(db);
+	const commandHandler = new CommandHandler(db, embeddingService, env);
+
+	app.command(
+		"/emoji-label",
+		async (_req) => {
+			return;
+		},
+		async ({ body, context }) => {
+			const response = await commandHandler.handle(
+				body.text,
+				body.user_id,
+				body.user_name,
+			);
+			await context.respond({
+				replace_original: false,
+				thread_ts: body.ts,
+				...response,
+			} as WebhookParams);
+		},
+	);
 
 	// 絵文字追加用
 	app.shortcut("add_emoji_label", async ({ payload, context }) => {

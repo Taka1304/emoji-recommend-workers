@@ -19,6 +19,16 @@ export type Emoji = {
 	creator_id: string;
 } & Timestamp;
 
+export type EmojiWithUser = {
+	id: string;
+	name: string;
+	label: string;
+	reaction_count: number;
+	creator_id: string;
+	creator_name: string;
+	creator_total_point: number;
+};
+
 export type Message = {
 	id: string;
 	text: string;

@@ -57,6 +57,51 @@ export class DatabaseService {
 		};
 	}
 
+	async deleteEmoji(emojiName: string, userId: string) {
+		try {
+			// トランザクション開始
+			await this.db.prepare("BEGIN TRANSACTION").run();
+
+			// 絵文字の存在と権限チェック
+			const emoji = await this.db
+				.prepare("SELECT creator_id FROM Emoji WHERE id = ?")
+				.bind(emojiName)
+				.first<{ creator_id: string }>();
+
+			if (!emoji) {
+				await this.db.prepare("ROLLBACK").run();
+				return { success: false, error: "emoji_not_found" };
+			}
+
+			if (emoji.creator_id !== userId) {
+				await this.db.prepare("ROLLBACK").run();
+				return { success: false, error: "permission_denied" };
+			}
+
+			// 関連するリアクションを削除
+			await this.db
+				.prepare("DELETE FROM Reaction WHERE emoji_id = ?")
+				.bind(emojiName)
+				.run();
+
+			// 絵文字を削除
+			const result = await this.db
+				.prepare("DELETE FROM Emoji WHERE id = ?")
+				.bind(emojiName)
+				.run();
+
+			await this.db.prepare("COMMIT").run();
+
+			return {
+				success: true,
+				changes: result.meta.changes,
+			};
+		} catch (error) {
+			await this.db.prepare("ROLLBACK").run();
+			throw error;
+		}
+	}
+
 	// User関連
 	async createUser(id: string, name: string) {
 		return await this.db

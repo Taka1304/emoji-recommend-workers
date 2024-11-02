@@ -7,10 +7,7 @@ import type {
 import type { DatabaseService } from "../services/d1";
 
 export class ShortcutHandler {
-	constructor(
-		private env: Env,
-		private db: DatabaseService,
-	) {}
+	constructor(private db: DatabaseService) {}
 
 	async handle(
 		payload: GlobalShortcut | MessageShortcut,

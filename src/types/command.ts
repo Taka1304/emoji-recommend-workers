@@ -1,6 +1,8 @@
-export type CommandArgs = {
-	add: { emoji: string; text: string };
+export type EmojiCommand = {
+	add: { name: string; label?: string };
 	list: { page?: number };
-	edit: { id: string; emoji?: string; text?: string };
+	edit: { id: string; label: string };
+	delete: { id: string };
 	help: Record<string, never>;
+	stats: { emoji?: string };
 };

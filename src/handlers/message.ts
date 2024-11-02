@@ -21,19 +21,20 @@ export class MessageHandler {
 				namespace: "emoji",
 				returnMetadata: "all",
 			});
-			console.log("Vectorize res: ", result);
+			console.log(
+				"Vectorize res: ",
+				result.matches.map((m) => m.metadata?.name),
+			);
 			await this.addReactions(result, channel, ts, context);
 		} catch (error) {
 			const result: VectorizeMatches = {
-				matches: [
-					{
-						id: "",
-						metadata: {
-							emoji: "warning",
-						},
-						score: 1,
+				matches: [5, 0, 3].map((n) => ({
+					id: "",
+					metadata: {
+						name: `${n}`,
 					},
-				],
+					score: 1,
+				})),
 				count: 1,
 			};
 			await this.addReactions(result, channel, ts, context);
@@ -48,18 +49,18 @@ export class MessageHandler {
 		context: SlackAppContext,
 	) {
 		const reactions = result.matches.map((match) => ({
-			emoji: (match?.metadata?.emoji as string) || "",
+			name: (match?.metadata?.name as string) || "",
 		}));
 
-		for (const { emoji } of reactions) {
+		for (const { name } of reactions) {
 			try {
 				await context.client.reactions.add({
 					channel,
-					name: emoji,
+					name: name,
 					timestamp: ts,
 				});
 			} catch (error) {
-				console.error(`Failed to add reaction ${emoji}:`, error);
+				console.error(`Failed to add reaction ${name}:`, error);
 			}
 		}
 	}
