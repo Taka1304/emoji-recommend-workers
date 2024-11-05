@@ -87,11 +87,7 @@ export class CommandHandler {
 					type: "section",
 					text: {
 						type: "mrkdwn" as const,
-						text: `• :${emoji.name}: (ID: \`${emoji.id}\`)
-               ${emoji.label ? `\nラベル: ${emoji.label}` : ""}
-               \n作成者: ${emoji.creator_name} | リアクション数: ${
-									emoji.reaction_count
-								}`,
+						text: `• :${emoji.name}: ${emoji.label ? `ラベル: ${emoji.label}` : ""}`,
 					},
 				})),
 				{
@@ -164,44 +160,45 @@ export class CommandHandler {
 	}
 
 	private async handleStats(args: string[]) {
-		const emojiName = args[0]?.replace(/:/g, "");
+		return { text: "🔧 開発中です" };
+		// 	const emojiName = args[0]?.replace(/:/g, "");
 
-		try {
-			const emoji = emojiName ? await this.db.getEmoji(emojiName) : null;
-			if (emojiName && !emoji) {
-				return { text: "❌ 指定された絵文字が見つかりません" };
-			}
+		// 	try {
+		// 		const emoji = emojiName ? await this.db.getEmoji(emojiName) : null;
+		// 		if (emojiName && !emoji) {
+		// 			return { text: "❌ 指定された絵文字が見つかりません" };
+		// 		}
 
-			const stats = await this.db.getEmojiStats(emoji?.id || "");
-			if (!stats) {
-				return { text: "❌ 統計情報が見つかりません" };
-			}
+		// 		const stats = await this.db.getEmojiStats(emoji?.id || "");
+		// 		if (!stats) {
+		// 			return { text: "❌ 統計情報が見つかりません" };
+		// 		}
 
-			return {
-				blocks: [
-					{
-						type: "section",
-						text: {
-							type: "mrkdwn" as const,
-							text: "*絵文字使用統計:*",
-						},
-					},
-					// ...stats.results.map(stat => ({
-					//   type: "section",
-					//   text: {
-					//     type: "mrkdwn" as const,
-					//     text: `:${stat.name}:
-					//     \n• 合計リアクション数: ${stat.reaction_count}
-					//     \n• ユニークユーザー数: ${stat.unique_users}
-					//     \n• 使用メッセージ数: ${stat.unique_messages}`
-					//   }
-					// }))
-				],
-			};
-		} catch (error) {
-			console.error("Stats error:", error);
-			return { text: "❌ 統計情報の取得に失敗しました" };
-		}
+		// 		return {
+		// 			blocks: [
+		// 				{
+		// 					type: "section",
+		// 					text: {
+		// 						type: "mrkdwn" as const,
+		// 						text: "*絵文字使用統計:*",
+		// 					},
+		// 				},
+		// 				// ...stats.results.map(stat => ({
+		// 				//   type: "section",
+		// 				//   text: {
+		// 				//     type: "mrkdwn" as const,
+		// 				//     text: `:${stat.name}:
+		// 				//     \n• 合計リアクション数: ${stat.reaction_count}
+		// 				//     \n• ユニークユーザー数: ${stat.unique_users}
+		// 				//     \n• 使用メッセージ数: ${stat.unique_messages}`
+		// 				//   }
+		// 				// }))
+		// 			],
+		// 		};
+		// 	} catch (error) {
+		// 		console.error("Stats error:", error);
+		// 		return { text: "❌ 統計情報の取得に失敗しました" };
+		// 	}
 	}
 
 	private handleHelp() {
