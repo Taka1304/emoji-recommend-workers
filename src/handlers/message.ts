@@ -1,5 +1,6 @@
 import type { SlackAppContext } from "slack-cloudflare-workers";
 import type { EmbeddingService } from "../services/embedding";
+import { pickEmojis } from "../utils/emoji";
 
 export class MessageHandler {
 	constructor(
@@ -14,6 +15,7 @@ export class MessageHandler {
 		const { channel, ts, text } = event;
 		if (!channel || !ts || !text) return;
 
+		// Text Embedding → Vectorize → Emoji Recommendation
 		try {
 			const embedding = await this.embeddingService.getEmbedding(text);
 			const result = await this.env.VECTORIZE.query(embedding, {
@@ -27,8 +29,10 @@ export class MessageHandler {
 			);
 			await this.addReactions(result, channel, ts, context);
 		} catch (error) {
+			const randomEmojis = pickEmojis(3);
+
 			const result: VectorizeMatches = {
-				matches: [5, 0, 3].map((n) => ({
+				matches: randomEmojis.map((n) => ({
 					id: "",
 					metadata: {
 						name: `${n}`,
