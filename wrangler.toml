@@ -12,6 +12,7 @@ index_name = "emoji-embeddings"
 binding = "DB"
 database_name = "emoji-recommend"
 database_id = "0efc6aaf-fdee-4133-9ff1-aa298a953d6d"
+preview_database_id="4d589782-b11e-4799-b376-350e8d48d68c"
 
 [observability]
 enabled = true
