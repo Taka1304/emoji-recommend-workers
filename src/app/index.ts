@@ -1,4 +1,5 @@
 import { SlackApp, type WebhookParams } from "slack-cloudflare-workers";
+import { AppMentionHandler } from "../handlers/app_mention";
 import { CommandHandler } from "../handlers/command";
 import { MessageHandler } from "../handlers/message";
 import { ShortcutHandler } from "../handlers/shortcut";
@@ -12,6 +13,7 @@ export function createSlackApp(env: Env) {
 	const messageHandler = new MessageHandler(env, embeddingService);
 	const shortcutHandler = new ShortcutHandler(db);
 	const commandHandler = new CommandHandler(db, embeddingService, env);
+	const appMentionHandler = new AppMentionHandler();
 
 	app.command(
 		"/emoji-label",
@@ -47,14 +49,8 @@ export function createSlackApp(env: Env) {
 
 	app.event("app_mention", async ({ body, context }) => {
 		const { event } = body;
-		if (event.subtype === "bot_message") {
-			return;
-		}
-
-		await context.client.chat.postMessage({
-			channel: event.channel,
-			text: "JUST DO IT!",
-		});
+		if (event.subtype === "bot_message") return;
+		await appMentionHandler.handle(event, context);
 	});
 
 	app.view("emoji_label_submission", async ({ payload, context, body }) => {
