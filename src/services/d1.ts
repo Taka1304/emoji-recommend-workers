@@ -137,8 +137,12 @@ export class DatabaseService {
 	}
 
 	// Message関連
-	async createMessage(text: string, userId: string, channelId: string) {
-		const id = crypto.randomUUID();
+	async createMessage(
+		id: string,
+		text: string,
+		userId: string,
+		channelId: string,
+	) {
 		return await this.db
 			.prepare(
 				"INSERT INTO Message (id, text, user_id, channel_id) VALUES (?, ?, ?, ?)",
@@ -151,15 +155,26 @@ export class DatabaseService {
 	async createReaction(messageId: string, userId: string, emojiId: string) {
 		const id = crypto.randomUUID();
 
-		// トランザクションを使用して、リアクションを追加し、カウントを更新
-		const stmt = this.db.prepare(
-			"BEGIN TRANSACTION;" +
-				"INSERT INTO Reaction (id, message_id, user_id, emoji_id) VALUES (?, ?, ?, ?);" +
-				"UPDATE Emoji SET reaction_count = reaction_count + 1 WHERE id = ?;" +
-				"COMMIT;",
-		);
-
-		return await stmt.bind(id, messageId, userId, emojiId, emojiId).run();
+		// D1のbatchメソッドを使用して、複数のクエリを一括で実行
+		return await this.db
+			.prepare("SELECT 1")
+			.run()
+			.then(async () => {
+				return await this.db.batch([
+					// リアクションの挿入
+					this.db
+						.prepare(
+							"INSERT INTO Reaction (id, message_id, user_id, emoji_id) VALUES (?, ?, ?, ?)",
+						)
+						.bind(id, messageId, userId, emojiId),
+					// 絵文字のリアクション数の更新
+					this.db
+						.prepare(
+							"UPDATE Emoji SET reaction_count = reaction_count + 1 WHERE id = ?",
+						)
+						.bind(emojiId),
+				]);
+			});
 	}
 
 	// 絵文字の使用統計を取得

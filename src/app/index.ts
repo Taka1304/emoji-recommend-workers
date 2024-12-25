@@ -2,6 +2,7 @@ import { SlackApp, type WebhookParams } from "slack-cloudflare-workers";
 import { AppMentionHandler } from "../handlers/app_mention";
 import { CommandHandler } from "../handlers/command";
 import { MessageHandler } from "../handlers/message";
+import { ReactionAddedHandler } from "../handlers/reaction_added";
 import { ShortcutHandler } from "../handlers/shortcut";
 import { DatabaseService } from "../services/d1";
 import { EmbeddingService } from "../services/embedding";
@@ -10,10 +11,11 @@ export function createSlackApp(env: Env) {
 	const app = new SlackApp({ env });
 	const embeddingService = new EmbeddingService(env);
 	const db = new DatabaseService(env.DB);
-	const messageHandler = new MessageHandler(env, embeddingService);
+	const messageHandler = new MessageHandler(env, db, embeddingService);
 	const shortcutHandler = new ShortcutHandler(db);
 	const commandHandler = new CommandHandler(db, embeddingService, env);
 	const appMentionHandler = new AppMentionHandler();
+	const reactionAddedHandler = new ReactionAddedHandler(db, env);
 
 	app.command(
 		"/emoji-label",
@@ -38,6 +40,7 @@ export function createSlackApp(env: Env) {
 	app.shortcut("add_emoji_label", async ({ payload, context }) => {
 		await shortcutHandler.handle(payload, context);
 	});
+
 	// 絵文字一覧表示用
 	app.shortcut("list_emoji_labels", async ({ payload, context }) => {
 		await shortcutHandler.handle(payload, context);
@@ -51,6 +54,11 @@ export function createSlackApp(env: Env) {
 		const { event } = body;
 		if (event.subtype === "bot_message") return;
 		await appMentionHandler.handle(event, context);
+	});
+
+	app.event("reaction_added", async ({ body, context }) => {
+		const { event } = body;
+		await reactionAddedHandler.handle(event, context);
 	});
 
 	app.view("emoji_label_submission", async ({ payload, context, body }) => {

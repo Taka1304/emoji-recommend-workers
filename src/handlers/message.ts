@@ -1,10 +1,12 @@
 import type { SlackAppContext } from "slack-cloudflare-workers";
+import type { DatabaseService } from "../services/d1";
 import type { EmbeddingService } from "../services/embedding";
 import { pickEmojis } from "../utils/emoji";
 
 export class MessageHandler {
 	constructor(
 		private env: Env,
+		private db: DatabaseService,
 		private embeddingService: EmbeddingService,
 	) {}
 
@@ -12,8 +14,12 @@ export class MessageHandler {
 	async handleMessage(event: any, context: SlackAppContext) {
 		if (event.subtype === "bot_message") return;
 
-		const { channel, ts, text } = event;
+		const { channel, ts, text, user } = event;
 		if (!channel || !ts || !text) return;
+
+		// DBにメッセージを保存
+		await this.db.getOrCreateUser(user, "?");
+		await this.db.createMessage(`${channel}-${ts}`, text, user, channel);
 
 		// Text Embedding → Vectorize → Emoji Recommendation
 		try {
